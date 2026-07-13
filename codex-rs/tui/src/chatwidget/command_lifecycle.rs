@@ -305,6 +305,7 @@ impl ChatWidget {
                 source,
                 /*interaction_input*/ None,
                 self.config.animations,
+                self.exec_output_mode,
             )));
             self.bump_active_cell_revision();
         }
@@ -421,6 +422,7 @@ impl ChatWidget {
                     source,
                     /*interaction_input*/ None,
                     self.config.animations,
+                    self.exec_output_mode,
                 );
                 let completed = orphan.complete_call(&id, output, duration);
                 debug_assert!(completed, "new orphan exec cell should contain {id}");
@@ -438,6 +440,7 @@ impl ChatWidget {
                     source,
                     /*interaction_input*/ None,
                     self.config.animations,
+                    self.exec_output_mode,
                 );
                 let completed = cell.complete_call(&id, output, duration);
                 debug_assert!(completed, "new exec cell should contain {id}");

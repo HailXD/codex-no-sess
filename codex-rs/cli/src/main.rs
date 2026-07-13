@@ -2460,6 +2460,7 @@ fn merge_interactive_cli_flags(interactive: &mut TuiCli, subcommand_cli: TuiCli)
         strict_config,
         approval_policy,
         web_search,
+        less_output,
         prompt,
         config_overrides,
         ..
@@ -2472,6 +2473,9 @@ fn merge_interactive_cli_flags(interactive: &mut TuiCli, subcommand_cli: TuiCli)
     }
     if web_search {
         interactive.web_search = true;
+    }
+    if less_output {
+        interactive.less_output = true;
     }
     if strict_config {
         interactive.strict_config = true;
@@ -3085,6 +3089,16 @@ mod tests {
         let result = MultitoolCli::try_parse_from(["codex", "--full-auto"]);
 
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn less_output_flag_is_supported_by_interactive_and_session_cli() {
+        let cli = MultitoolCli::try_parse_from(["codex", "--less-output"]).expect("parse");
+        assert!(cli.interactive.less_output);
+
+        let interactive =
+            finalize_resume_from_args(["codex", "resume", "--last", "--less-output"].as_ref());
+        assert!(interactive.less_output);
     }
 
     #[test]

@@ -13,6 +13,7 @@ impl ChatWidget {
     ) -> Self {
         let ChatWidgetInit {
             config,
+            exec_output_mode,
             frame_requester,
             app_event_tx,
             workspace_command_runner,
@@ -106,6 +107,7 @@ impl ChatWidget {
                 skills: None,
             }),
             transcript: TranscriptState::new(active_cell),
+            exec_output_mode,
             raw_output_mode: config.tui_raw_output_mode,
             config,
             effective_service_tier,

@@ -1672,6 +1672,7 @@ async fn run_ratatui_app(
         prompt,
         shared,
         no_alt_screen,
+        less_output,
         ..
     } = cli;
     let images = shared.into_inner().images;
@@ -1747,6 +1748,11 @@ async fn run_ratatui_app(
         cloud_config_bundle,
         prompt,
         images,
+        if less_output {
+            crate::exec_cell::ExecOutputMode::CommandsOnly
+        } else {
+            crate::exec_cell::ExecOutputMode::Full
+        },
         session_selection,
         feedback,
         should_show_trust_screen, // Proxy to: is it a first run in this directory?

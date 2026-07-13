@@ -11,6 +11,13 @@ use std::time::Instant;
 use codex_app_server_protocol::CommandExecutionSource as ExecCommandSource;
 use codex_protocol::parse_command::ParsedCommand;
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(crate) enum ExecOutputMode {
+    #[default]
+    Full,
+    CommandsOnly,
+}
+
 #[derive(Clone, Debug, Default)]
 pub(crate) struct CommandOutput {
     pub(crate) exit_code: i32,
@@ -35,7 +42,8 @@ pub(crate) struct ExecCall {
 #[derive(Debug)]
 pub(crate) struct ExecCell {
     pub(crate) calls: Vec<ExecCall>,
-    animations_enabled: bool,
+    pub(super) animations_enabled: bool,
+    pub(super) output_mode: ExecOutputMode,
 }
 
 impl ExecCell {
@@ -43,6 +51,7 @@ impl ExecCell {
         Self {
             calls: vec![call],
             animations_enabled,
+            output_mode: ExecOutputMode::Full,
         }
     }
 
@@ -68,6 +77,7 @@ impl ExecCell {
             Some(Self {
                 calls: [self.calls.clone(), vec![call]].concat(),
                 animations_enabled: self.animations_enabled,
+                output_mode: self.output_mode,
             })
         } else {
             None

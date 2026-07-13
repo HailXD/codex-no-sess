@@ -317,6 +317,7 @@ async fn enqueue_primary_thread_session_replays_turns_before_initial_prompt_subm
     let model = get_model_offline_for_tests(config.model.as_deref());
     app.chat_widget = ChatWidget::new_with_app_event(ChatWidgetInit {
         config,
+        exec_output_mode: app.exec_output_mode,
         frame_requester: crate::tui::FrameRequester::test_dummy(),
         app_event_tx: app.app_event_tx.clone(),
         workspace_command_runner: None,
@@ -4060,6 +4061,7 @@ async fn make_test_app() -> App {
         chat_widget,
         workspace_command_runner: None,
         config,
+        exec_output_mode: ExecOutputMode::Full,
         state_db: None,
         cli_kv_overrides: Vec::new(),
         harness_overrides: ConfigOverrides::default(),
@@ -4125,6 +4127,7 @@ async fn make_test_app_with_channels() -> (
             chat_widget,
             workspace_command_runner: None,
             config,
+            exec_output_mode: ExecOutputMode::Full,
             state_db: None,
             cli_kv_overrides: Vec::new(),
             harness_overrides: ConfigOverrides::default(),
@@ -5383,6 +5386,7 @@ async fn replace_chat_widget_reseeds_collab_agent_metadata_for_replay() {
 
     let replacement = ChatWidget::new_with_app_event(ChatWidgetInit {
         config: app.config.clone(),
+        exec_output_mode: app.exec_output_mode,
         frame_requester: crate::tui::FrameRequester::test_dummy(),
         app_event_tx: app.app_event_tx.clone(),
         workspace_command_runner: None,
@@ -5730,6 +5734,22 @@ async fn new_session_requests_shutdown_for_previous_conversation() {
         );
     })
     .await;
+}
+
+#[tokio::test]
+async fn new_thread_widget_init_preserves_less_output() -> Result<()> {
+    let mut app = make_test_app().await;
+    app.exec_output_mode = ExecOutputMode::CommandsOnly;
+    let mut tui = crate::tui::test_support::make_test_tui()?;
+
+    let init = app.chatwidget_init_for_forked_or_resumed_thread(
+        &mut tui,
+        app.config.clone(),
+        /*initial_user_message*/ None,
+    );
+
+    assert_eq!(init.exec_output_mode, ExecOutputMode::CommandsOnly);
+    Ok(())
 }
 
 #[tokio::test]

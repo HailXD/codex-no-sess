@@ -1225,6 +1225,7 @@ mod tests {
             ExecCommandSource::Agent,
             /*interaction_input*/ None,
             /*animations_enabled*/ true,
+            crate::exec_cell::ExecOutputMode::Full,
         );
         exec_cell.complete_call(
             "exec-1",

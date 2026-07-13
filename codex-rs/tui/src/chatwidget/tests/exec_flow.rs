@@ -992,6 +992,26 @@ async fn user_shell_command_renders_output_not_exploring() {
 }
 
 #[tokio::test]
+async fn less_output_renders_command_without_command_output() {
+    let (mut chat, mut rx, _op_rx) = make_chatwidget_manual(/*model_override*/ None).await;
+    chat.exec_output_mode = ExecOutputMode::CommandsOnly;
+
+    let begin = begin_exec(&mut chat, "less-output", "printf visible-command");
+    end_exec(
+        &mut chat,
+        begin,
+        "hidden command output\n",
+        "hidden command error\n",
+        /*exit_code*/ 0,
+    );
+
+    let cells = drain_insert_history(&mut rx);
+    let blob = lines_to_single_string(cells.first().expect("exec history cell"));
+    assert!(!blob.contains("hidden command"));
+    assert_chatwidget_snapshot!("less_output_command_only", blob);
+}
+
+#[tokio::test]
 async fn bang_shell_enter_while_task_running_submits_run_user_shell_command() {
     let (mut chat, mut rx, mut op_rx) = make_chatwidget_manual(/*model_override*/ None).await;
     let thread_id = ThreadId::new();

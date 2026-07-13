@@ -75,6 +75,10 @@ pub struct Cli {
     #[arg(long = "no-alt-screen", default_value_t = false)]
     pub no_alt_screen: bool,
 
+    /// Hide command output while still showing executed commands and code diffs.
+    #[arg(long = "less-output", default_value_t = false)]
+    pub less_output: bool,
+
     #[clap(skip)]
     pub config_overrides: CliConfigOverrides,
 }

@@ -3,6 +3,7 @@ use std::time::Instant;
 use super::model::CommandOutput;
 use super::model::ExecCall;
 use super::model::ExecCell;
+use super::model::ExecOutputMode;
 use crate::exec_command::strip_bash_lc_and_escape;
 use crate::history_cell::HistoryCell;
 use crate::history_cell::plain_lines;
@@ -48,9 +49,10 @@ pub(crate) fn new_active_exec_command(
     source: ExecCommandSource,
     interaction_input: Option<String>,
     animations_enabled: bool,
+    output_mode: ExecOutputMode,
 ) -> ExecCell {
-    ExecCell::new(
-        ExecCall {
+    ExecCell {
+        calls: vec![ExecCall {
             call_id,
             command,
             parsed,
@@ -59,9 +61,10 @@ pub(crate) fn new_active_exec_command(
             start_time: Some(Instant::now()),
             duration: None,
             interaction_input,
-        },
+        }],
         animations_enabled,
-    )
+        output_mode,
+    }
 }
 
 fn format_unified_exec_interaction(command: &[String], input: Option<&str>) -> String {
@@ -218,7 +221,7 @@ impl HistoryCell for ExecCell {
             lines.extend(cmd_display);
 
             if let Some(output) = call.output.as_ref() {
-                if !call.is_unified_exec_interaction() {
+                if self.output_mode == ExecOutputMode::Full && !call.is_unified_exec_interaction() {
                     let wrap_width = width.max(1) as usize;
                     let wrap_opts = RtOptions::new(wrap_width);
                     for unwrapped in output.formatted_output.lines().map(ansi_escape_line) {
@@ -439,7 +442,9 @@ impl ExecCell {
             ));
         }
 
-        if let Some(output) = call.output.as_ref() {
+        if self.output_mode == ExecOutputMode::Full
+            && let Some(output) = call.output.as_ref()
+        {
             let line_limit = if call.is_user_shell_command() {
                 USER_SHELL_TOOL_CALL_MAX_LINES
             } else {

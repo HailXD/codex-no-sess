@@ -65,6 +65,10 @@ pub struct Cli {
     #[arg(long = "search", default_value_t = false)]
     pub web_search: bool,
 
+    /// Run without persisting session files to disk
+    #[arg(long = "ephemeral", default_value_t = false)]
+    pub ephemeral: bool,
+
     /// Disable alternate screen mode
     ///
     /// Runs the TUI in inline mode, preserving terminal scrollback history.

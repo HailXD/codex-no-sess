@@ -870,6 +870,11 @@ pub async fn run_main(
             .raw_overrides
             .push("web_search=\"live\"".to_string());
     }
+    if cli.ephemeral {
+        cli.config_overrides
+            .raw_overrides
+            .push("ephemeral=true".to_string());
+    }
 
     // When using `--oss`, let the bootstrapper pick the model (defaulting to
     // gpt-oss:20b) and ensure it is present locally. Also, force the built‑in

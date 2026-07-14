@@ -1551,6 +1551,27 @@ async fn apply_patch_manual_flow_snapshot() {
 }
 
 #[tokio::test]
+async fn no_diff_apply_patch_renders_summary_only() {
+    let (mut chat, mut rx, _op_rx) = make_chatwidget_manual(/*model_override*/ None).await;
+    chat.exec_output_mode = ExecOutputMode::CommandsOnlyWithoutDiffs;
+    let mut changes = HashMap::new();
+    changes.insert(
+        PathBuf::from("foo.txt"),
+        FileChange::Add {
+            content: "hello\n".to_string(),
+        },
+    );
+
+    handle_patch_apply_begin(&mut chat, "c1", "turn-c1", changes);
+    let lines = drain_insert_history(&mut rx).pop().expect("patch cell");
+
+    assert_chatwidget_snapshot!(
+        "no_diff_apply_patch_summary_only",
+        lines_to_single_string(&lines)
+    );
+}
+
+#[tokio::test]
 async fn apply_patch_approval_sends_op_with_call_id() {
     let (mut chat, mut rx, _op_rx) = make_chatwidget_manual(/*model_override*/ None).await;
     // Simulate receiving an approval request with a distinct event id and call id.

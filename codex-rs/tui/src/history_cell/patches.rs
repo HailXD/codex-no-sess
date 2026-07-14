@@ -7,19 +7,26 @@ use codex_utils_path_uri::LegacyAppPathString;
 pub(crate) struct PatchHistoryCell {
     changes: HashMap<PathBuf, FileChange>,
     cwd: PathBuf,
+    output_mode: ExecOutputMode,
+}
+
+impl PatchHistoryCell {
+    fn lines(&self, width: usize) -> Vec<Line<'static>> {
+        if matches!(self.output_mode, ExecOutputMode::CommandsOnlyWithoutDiffs) {
+            create_diff_summary_only(&self.changes, &self.cwd)
+        } else {
+            create_diff_summary(&self.changes, &self.cwd, width)
+        }
+    }
 }
 
 impl HistoryCell for PatchHistoryCell {
     fn display_lines(&self, width: u16) -> Vec<Line<'static>> {
-        create_diff_summary(&self.changes, &self.cwd, width as usize)
+        self.lines(width as usize)
     }
 
     fn raw_lines(&self) -> Vec<Line<'static>> {
-        plain_lines(create_diff_summary(
-            &self.changes,
-            &self.cwd,
-            RAW_DIFF_SUMMARY_WIDTH,
-        ))
+        plain_lines(self.lines(RAW_DIFF_SUMMARY_WIDTH))
     }
 }
 /// Create a new `PendingPatch` cell that lists the file‑level summary of
@@ -28,10 +35,12 @@ impl HistoryCell for PatchHistoryCell {
 pub(crate) fn new_patch_event(
     changes: HashMap<PathBuf, FileChange>,
     cwd: &Path,
+    output_mode: ExecOutputMode,
 ) -> PatchHistoryCell {
     PatchHistoryCell {
         changes,
         cwd: cwd.to_path_buf(),
+        output_mode,
     }
 }
 

@@ -79,6 +79,10 @@ pub struct Cli {
     #[arg(long = "less-output", default_value_t = false)]
     pub less_output: bool,
 
+    /// Hide command output and code diffs while retaining command and file summaries.
+    #[arg(long = "no-diff", default_value_t = false)]
+    pub no_diff: bool,
+
     #[clap(skip)]
     pub config_overrides: CliConfigOverrides,
 }

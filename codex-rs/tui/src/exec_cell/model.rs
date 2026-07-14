@@ -16,6 +16,7 @@ pub(crate) enum ExecOutputMode {
     #[default]
     Full,
     CommandsOnly,
+    CommandsOnlyWithoutDiffs,
 }
 
 #[derive(Clone, Debug, Default)]

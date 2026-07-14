@@ -1673,6 +1673,7 @@ async fn run_ratatui_app(
         shared,
         no_alt_screen,
         less_output,
+        no_diff,
         ..
     } = cli;
     let images = shared.into_inner().images;
@@ -1748,7 +1749,9 @@ async fn run_ratatui_app(
         cloud_config_bundle,
         prompt,
         images,
-        if less_output {
+        if no_diff {
+            crate::exec_cell::ExecOutputMode::CommandsOnlyWithoutDiffs
+        } else if less_output {
             crate::exec_cell::ExecOutputMode::CommandsOnly
         } else {
             crate::exec_cell::ExecOutputMode::Full

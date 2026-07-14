@@ -2461,6 +2461,7 @@ fn merge_interactive_cli_flags(interactive: &mut TuiCli, subcommand_cli: TuiCli)
         approval_policy,
         web_search,
         less_output,
+        no_diff,
         prompt,
         config_overrides,
         ..
@@ -2476,6 +2477,9 @@ fn merge_interactive_cli_flags(interactive: &mut TuiCli, subcommand_cli: TuiCli)
     }
     if less_output {
         interactive.less_output = true;
+    }
+    if no_diff {
+        interactive.no_diff = true;
     }
     if strict_config {
         interactive.strict_config = true;
@@ -3092,13 +3096,20 @@ mod tests {
     }
 
     #[test]
-    fn less_output_flag_is_supported_by_interactive_and_session_cli() {
+    fn reduced_output_flags_are_supported_by_interactive_and_session_cli() {
         let cli = MultitoolCli::try_parse_from(["codex", "--less-output"]).expect("parse");
         assert!(cli.interactive.less_output);
 
         let interactive =
             finalize_resume_from_args(["codex", "resume", "--last", "--less-output"].as_ref());
         assert!(interactive.less_output);
+
+        let cli = MultitoolCli::try_parse_from(["codex", "--no-diff"]).expect("parse");
+        assert!(cli.interactive.no_diff);
+
+        let interactive =
+            finalize_resume_from_args(["codex", "resume", "--last", "--no-diff"].as_ref());
+        assert!(interactive.no_diff);
     }
 
     #[test]

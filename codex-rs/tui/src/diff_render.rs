@@ -351,7 +351,21 @@ pub(crate) fn create_diff_summary(
     wrap_cols: usize,
 ) -> Vec<RtLine<'static>> {
     let rows = collect_rows(changes);
-    render_changes_block(rows, wrap_cols, cwd)
+    render_changes_block(rows, cwd, DiffDetail::Full { wrap_cols })
+}
+
+pub(crate) fn create_diff_summary_only(
+    changes: &HashMap<PathBuf, FileChange>,
+    cwd: &Path,
+) -> Vec<RtLine<'static>> {
+    let rows = collect_rows(changes);
+    render_changes_block(rows, cwd, DiffDetail::Summary)
+}
+
+#[derive(Clone, Copy)]
+enum DiffDetail {
+    Full { wrap_cols: usize },
+    Summary,
 }
 
 // Shared row for per-file presentation
@@ -402,7 +416,7 @@ fn render_line_count_summary(added: usize, removed: usize) -> Vec<RtSpan<'static
     spans
 }
 
-fn render_changes_block(rows: Vec<Row>, wrap_cols: usize, cwd: &Path) -> Vec<RtLine<'static>> {
+fn render_changes_block(rows: Vec<Row>, cwd: &Path, detail: DiffDetail) -> Vec<RtLine<'static>> {
     let mut out: Vec<RtLine<'static>> = Vec::new();
 
     let render_path = |row: &Row| -> Vec<RtSpan<'static>> {
@@ -453,6 +467,10 @@ fn render_changes_block(rows: Vec<Row>, wrap_cols: usize, cwd: &Path) -> Vec<RtL
             header.extend(render_line_count_summary(r.added, r.removed));
             out.push(RtLine::from(header));
         }
+
+        let DiffDetail::Full { wrap_cols } = detail else {
+            continue;
+        };
 
         // For renames, use the destination extension for highlighting — the
         // diff content reflects the new file, not the old one.

@@ -5749,6 +5749,17 @@ async fn new_thread_widget_init_preserves_less_output() -> Result<()> {
     );
 
     assert_eq!(init.exec_output_mode, ExecOutputMode::CommandsOnly);
+
+    app.exec_output_mode = ExecOutputMode::CommandsOnlyWithoutDiffs;
+    let init = app.chatwidget_init_for_forked_or_resumed_thread(
+        &mut tui,
+        app.config.clone(),
+        /*initial_user_message*/ None,
+    );
+    assert_eq!(
+        init.exec_output_mode,
+        ExecOutputMode::CommandsOnlyWithoutDiffs
+    );
     Ok(())
 }
 

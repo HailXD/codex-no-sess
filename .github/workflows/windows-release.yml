@@ -29,6 +29,8 @@ jobs:
         working-directory: codex-rs
     env:
       LIBSQLITE3_FLAGS: SQLITE_DISABLE_INTRINSIC
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -37,17 +39,17 @@ jobs:
       - uses: dtolnay/rust-toolchain@e081816240890017053eacbb1bdf337761dc5582 # 1.95.0
         with:
           targets: x86_64-pc-windows-msvc
-      - name: Restore Rust cache
+      - name: Set up sccache
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
+      - name: Restore Cargo cache
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            codex-rs/target
-          key: windows-rust-${{ hashFiles('codex-rs/Cargo.lock') }}-${{ github.sha }}
+          key: windows-cargo-${{ hashFiles('codex-rs/Cargo.lock') }}
           restore-keys: |
-            windows-rust-${{ hashFiles('codex-rs/Cargo.lock') }}-
-            windows-rust-
+            windows-cargo-
       - name: Build codex.exe
         shell: pwsh
         run: cargo rustc --locked --release -p codex-cli --bin codex --target x86_64-pc-windows-msvc -- -C debuginfo=0 -C strip=symbols

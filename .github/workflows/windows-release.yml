@@ -5,12 +5,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      tag:
-        description: Release tag
-        required: false
-        default: latest
-        type: string
 
 permissions:
   contents: write
@@ -53,20 +47,33 @@ jobs:
       - name: Build codex.exe
         shell: pwsh
         run: cargo rustc --locked --release -p codex-cli --bin codex --target x86_64-pc-windows-msvc -- -C debuginfo=0 -C strip=symbols
+      - name: Determine release tag
+        id: version
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $versions = @(
+            gh release list --limit 1000 --json tagName --repo $env:GITHUB_REPOSITORY |
+              jq -r '.[].tagName' |
+              Where-Object { $_ -match '^\d+\.\d$' } |
+              ForEach-Object { [decimal]::Parse($_, [Globalization.CultureInfo]::InvariantCulture) }
+          )
+          $next = if ($versions.Count -eq 0) {
+            [decimal]1.0
+          } else {
+            ($versions | Measure-Object -Maximum).Maximum + [decimal]0.1
+          }
+          $tag = $next.ToString("0.0", [Globalization.CultureInfo]::InvariantCulture)
+          "tag=$tag" >> $env:GITHUB_OUTPUT
       - name: Publish GitHub Release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.tag || 'latest' }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: |
-          if ($env:RELEASE_TAG -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]*$') {
-            throw "Release tag contains unsupported characters"
+          if ($env:RELEASE_TAG -notmatch '^\d+\.\d$') {
+            throw "Release tag must be a one-decimal version"
           }
           $asset = Join-Path $env:GITHUB_WORKSPACE "codex-rs\target\x86_64-pc-windows-msvc\release\codex.exe"
-          gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY *> $null
-          if ($LASTEXITCODE -eq 0) {
-            gh release upload $env:RELEASE_TAG $asset --clobber --repo $env:GITHUB_REPOSITORY
-            gh release edit $env:RELEASE_TAG --latest --repo $env:GITHUB_REPOSITORY
-          } else {
-            gh release create $env:RELEASE_TAG $asset --latest --target $env:GITHUB_SHA --title $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY
-          }
+          gh release create $env:RELEASE_TAG $asset --latest --target $env:GITHUB_SHA --title $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY

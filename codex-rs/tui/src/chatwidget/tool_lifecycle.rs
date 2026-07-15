@@ -17,7 +17,6 @@ impl ChatWidget {
     }
 
     pub(super) fn on_view_image_tool_call(&mut self, path: LegacyAppPathString) {
-        self.record_visible_turn_activity();
         self.flush_answer_stream_with_separator();
         self.add_to_history(history_cell::new_view_image_tool_call(
             path,
@@ -27,8 +26,10 @@ impl ChatWidget {
     }
 
     pub(super) fn on_image_generation_begin(&mut self) {
-        self.record_visible_turn_activity();
         self.flush_answer_stream_with_separator();
+        if self.bottom_pane.is_task_running() {
+            self.bottom_pane.ensure_status_indicator();
+        }
     }
 
     pub(super) fn on_image_generation_end(
@@ -73,7 +74,6 @@ impl ChatWidget {
     }
 
     pub(super) fn on_web_search_begin(&mut self, call_id: String) {
-        self.record_visible_turn_activity();
         self.flush_answer_stream_with_separator();
         self.flush_active_cell();
         self.transcript.active_cell = Some(Box::new(history_cell::new_active_web_search_call(
@@ -120,7 +120,6 @@ impl ChatWidget {
     }
 
     pub(super) fn on_collab_agent_tool_call(&mut self, item: ThreadItem) {
-        self.record_visible_turn_activity();
         let ThreadItem::CollabAgentToolCall {
             id, tool, status, ..
         } = &item
@@ -152,7 +151,6 @@ impl ChatWidget {
     }
 
     pub(super) fn on_sub_agent_activity(&mut self, item: ThreadItem) {
-        self.record_visible_turn_activity();
         if let Some(cell) = multi_agents::sub_agent_activity_history_cell(&item) {
             self.on_collab_event(cell);
         }
@@ -172,7 +170,6 @@ impl ChatWidget {
     }
 
     pub(crate) fn handle_mcp_tool_call_started_now(&mut self, item: ThreadItem) {
-        self.record_visible_turn_activity();
         let ThreadItem::McpToolCall {
             id,
             server,

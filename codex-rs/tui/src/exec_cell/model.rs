@@ -48,6 +48,7 @@ pub(crate) struct ExecCell {
 }
 
 impl ExecCell {
+    #[cfg(test)]
     pub(crate) fn new(call: ExecCall, animations_enabled: bool) -> Self {
         Self {
             calls: vec![call],

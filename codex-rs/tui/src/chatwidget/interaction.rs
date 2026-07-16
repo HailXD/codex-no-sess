@@ -330,6 +330,14 @@ impl ChatWidget {
         self.refresh_plan_mode_nudge();
     }
 
+    pub(crate) fn set_only_pasted(&mut self, enabled: bool) {
+        self.bottom_pane.set_only_pasted(enabled);
+    }
+
+    pub(crate) fn only_pasted(&self) -> bool {
+        self.bottom_pane.only_pasted()
+    }
+
     // Returns true if caller should skip rendering this frame (a future frame is scheduled).
     pub(crate) fn handle_paste_burst_tick(&mut self, frame_requester: FrameRequester) -> bool {
         if self.bottom_pane.flush_paste_burst_if_due() {

@@ -331,6 +331,7 @@ impl App {
     /// This helper copies every known nickname/role from `AgentNavigationState` into the
     /// replacement widget so that replayed collab items render agent names immediately.
     pub(super) fn replace_chat_widget(&mut self, mut chat_widget: ChatWidget) {
+        chat_widget.set_only_pasted(self.chat_widget.only_pasted());
         // Transfer the last-written terminal title to the replacement widget
         // so it knows what OSC title is currently displayed. Without this, the
         // new widget would redundantly clear and rewrite the same title, causing

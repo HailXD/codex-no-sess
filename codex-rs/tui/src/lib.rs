@@ -1674,6 +1674,7 @@ async fn run_ratatui_app(
         no_alt_screen,
         less_output,
         no_diff,
+        only_pasted,
         ..
     } = cli;
     let images = shared.into_inner().images;
@@ -1756,6 +1757,7 @@ async fn run_ratatui_app(
         } else {
             crate::exec_cell::ExecOutputMode::Full
         },
+        only_pasted,
         session_selection,
         feedback,
         should_show_trust_screen, // Proxy to: is it a first run in this directory?

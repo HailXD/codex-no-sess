@@ -2462,6 +2462,7 @@ fn merge_interactive_cli_flags(interactive: &mut TuiCli, subcommand_cli: TuiCli)
         web_search,
         less_output,
         no_diff,
+        only_pasted,
         prompt,
         config_overrides,
         ..
@@ -2480,6 +2481,9 @@ fn merge_interactive_cli_flags(interactive: &mut TuiCli, subcommand_cli: TuiCli)
     }
     if no_diff {
         interactive.no_diff = true;
+    }
+    if only_pasted {
+        interactive.only_pasted = true;
     }
     if strict_config {
         interactive.strict_config = true;
@@ -3096,7 +3100,7 @@ mod tests {
     }
 
     #[test]
-    fn reduced_output_flags_are_supported_by_interactive_and_session_cli() {
+    fn display_flags_are_supported_by_interactive_and_session_cli() {
         let cli = MultitoolCli::try_parse_from(["codex", "--less-output"]).expect("parse");
         assert!(cli.interactive.less_output);
 
@@ -3110,6 +3114,13 @@ mod tests {
         let interactive =
             finalize_resume_from_args(["codex", "resume", "--last", "--no-diff"].as_ref());
         assert!(interactive.no_diff);
+
+        let cli = MultitoolCli::try_parse_from(["codex", "--only-pasted"]).expect("parse");
+        assert!(cli.interactive.only_pasted);
+
+        let interactive =
+            finalize_resume_from_args(["codex", "resume", "--last", "--only-pasted"].as_ref());
+        assert!(interactive.only_pasted);
     }
 
     #[test]

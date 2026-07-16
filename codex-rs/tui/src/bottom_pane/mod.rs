@@ -313,6 +313,14 @@ impl BottomPane {
         self.request_redraw();
     }
 
+    pub(crate) fn set_only_pasted(&mut self, enabled: bool) {
+        self.composer.set_only_pasted(enabled);
+    }
+
+    pub(crate) fn only_pasted(&self) -> bool {
+        self.composer.only_pasted()
+    }
+
     pub fn set_connectors_snapshot(&mut self, snapshot: Option<ConnectorsSnapshot>) {
         self.composer.set_connector_mentions(snapshot);
         self.request_redraw();

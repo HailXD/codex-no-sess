@@ -348,6 +348,8 @@ pub(crate) struct ChatComposerConfig {
     pub(crate) slash_commands_enabled: bool,
     /// Whether pasting a file path can attach local images.
     pub(crate) image_paste_enabled: bool,
+    /// Whether pasted text is always represented by a placeholder
+    pub(crate) only_pasted: bool,
 }
 
 impl Default for ChatComposerConfig {
@@ -356,6 +358,7 @@ impl Default for ChatComposerConfig {
             popups_enabled: true,
             slash_commands_enabled: true,
             image_paste_enabled: true,
+            only_pasted: false,
         }
     }
 }
@@ -370,6 +373,7 @@ impl ChatComposerConfig {
             popups_enabled: false,
             slash_commands_enabled: false,
             image_paste_enabled: false,
+            only_pasted: false,
         }
     }
 }
@@ -628,6 +632,14 @@ impl ChatComposer {
     /// `ChatWidget` layer still performs capability checks before images are submitted.
     pub fn set_image_paste_enabled(&mut self, enabled: bool) {
         self.config.image_paste_enabled = enabled;
+    }
+
+    pub(crate) fn set_only_pasted(&mut self, enabled: bool) {
+        self.config.only_pasted = enabled;
+    }
+
+    pub(crate) fn only_pasted(&self) -> bool {
+        self.config.only_pasted
     }
 
     pub fn set_connector_mentions(&mut self, connectors_snapshot: Option<ConnectorsSnapshot>) {
@@ -905,8 +917,17 @@ impl ChatComposer {
         let pasted = pasted.replace("\r\n", "\n").replace('\r', "\n");
         let pasted = sanitize_user_text(&pasted);
         let char_count = pasted.chars().count();
-        if char_count > LARGE_PASTE_CHAR_THRESHOLD {
-            let placeholder = self.next_large_paste_placeholder(char_count);
+        if self.config.only_pasted && !pasted.is_empty() {
+            let line_count = pasted.split('\n').count();
+            let placeholder = self.next_paste_placeholder(format!(
+                "[Pasted Content {line_count} lines]"
+            ));
+            self.draft.textarea.insert_element(&placeholder);
+            self.draft.pending_pastes.push((placeholder, pasted));
+        } else if char_count > LARGE_PASTE_CHAR_THRESHOLD {
+            let placeholder = self.next_paste_placeholder(format!(
+                "[Pasted Content {char_count} chars]"
+            ));
             self.draft.textarea.insert_element(&placeholder);
             self.draft.pending_pastes.push((placeholder, pasted));
         } else if char_count > 1
@@ -1621,8 +1642,7 @@ impl ChatComposer {
             .is_some_and(|expires_at| Instant::now() < expires_at)
     }
 
-    fn next_large_paste_placeholder(&self, char_count: usize) -> String {
-        let base = format!("[Pasted Content {char_count} chars]");
+    fn next_paste_placeholder(&self, base: String) -> String {
         let prefix = format!("{base} #");
         let mut max_suffix = 0usize;
 
@@ -5681,6 +5701,30 @@ mod tests {
         assert_eq!(
             composer.history.navigate_up(&composer.app_event_tx),
             Some(HistoryEntry::new("draft text".to_string()))
+        );
+    }
+
+    #[test]
+    fn only_pasted_replaces_short_paste_with_line_placeholder() {
+        let (tx, _rx) = unbounded_channel::<AppEvent>();
+        let sender = AppEventSender::new(tx);
+        let mut composer = ChatComposer::new(
+            /*has_input_focus*/ true,
+            sender,
+            /*enhanced_keys_supported*/ false,
+            "Ask Codex to do anything".to_string(),
+            /*disable_paste_burst*/ false,
+        );
+        composer.set_only_pasted(/*enabled*/ true);
+
+        let paste = "one\ntwo".to_string();
+        composer.handle_paste(paste.clone());
+
+        let placeholder = "[Pasted Content 2 lines]";
+        assert_eq!(composer.draft.textarea.text(), placeholder);
+        assert_eq!(
+            composer.draft.pending_pastes,
+            vec![(placeholder.to_string(), paste)]
         );
     }
 

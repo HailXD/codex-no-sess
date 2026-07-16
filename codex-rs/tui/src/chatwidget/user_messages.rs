@@ -294,12 +294,15 @@ pub(super) fn remap_colliding_paste_placeholders(
     used: &mut HashSet<String>,
 ) -> (UserMessage, Vec<(String, String)>) {
     let mut mapping = HashMap::new();
-    for (placeholder, text) in &mut pending_pastes {
+    for (placeholder, _) in &mut pending_pastes {
         if used.insert(placeholder.clone()) {
             continue;
         }
 
-        let base = format!("[Pasted Content {} chars]", text.chars().count());
+        let base = placeholder
+            .rsplit_once(" #")
+            .filter(|(_, suffix)| suffix.parse::<usize>().is_ok())
+            .map_or_else(|| placeholder.clone(), |(base, _)| base.to_string());
         let mut suffix = 2;
         let replacement = loop {
             let candidate = format!("{base} #{suffix}");

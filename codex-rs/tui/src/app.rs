@@ -772,6 +772,7 @@ impl App {
         initial_prompt: Option<String>,
         initial_images: Vec<PathBuf>,
         exec_output_mode: ExecOutputMode,
+        only_pasted: bool,
         session_selection: SessionSelection,
         feedback: codex_feedback::CodexFeedback,
         is_first_run: bool,
@@ -1011,6 +1012,7 @@ impl App {
                 (ChatWidget::new_with_app_event(init), Some(forked))
             }
         };
+        chat_widget.set_only_pasted(only_pasted);
         chat_widget.remote_connection = remote_connection;
         let thread_and_widget_ms = thread_and_widget_started_at.elapsed().as_millis();
         chat_widget

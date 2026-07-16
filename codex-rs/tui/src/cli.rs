@@ -83,6 +83,10 @@ pub struct Cli {
     #[arg(long = "no-diff", default_value_t = false)]
     pub no_diff: bool,
 
+    /// Show pasted text as a line-count placeholder
+    #[arg(long = "only-pasted", default_value_t = false)]
+    pub only_pasted: bool,
+
     #[clap(skip)]
     pub config_overrides: CliConfigOverrides,
 }

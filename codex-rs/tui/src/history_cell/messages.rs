@@ -113,11 +113,7 @@ impl HistoryCell for UserHistoryCell {
         } else {
             &[]
         };
-        let wrap_width = width
-            .saturating_sub(
-                LIVE_PREFIX_COLS + 1, /* keep a one-column right margin for wrapping */
-            )
-            .max(1);
+        let wrap_width = width.saturating_sub(1).max(1);
 
         let style = user_message_style();
         let element_style = style.fg(Color::Cyan);
@@ -185,11 +181,7 @@ impl HistoryCell for UserHistoryCell {
         }
 
         if let Some(wrapped_message) = wrapped_message {
-            lines.extend(prefix_lines(
-                wrapped_message,
-                "› ".bold().dim(),
-                "  ".into(),
-            ));
+            lines.extend(wrapped_message);
         }
 
         lines.push(Line::from("").style(style));

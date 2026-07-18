@@ -1988,8 +1988,8 @@ fn ran_cell_multiline_with_stderr_snapshot() {
     insta::assert_snapshot!(rendered);
 }
 #[test]
-fn user_history_cell_wraps_and_prefixes_each_line_snapshot() {
-    let msg = "_count_r\x1b[13;2:3uows";
+fn user_history_cell_wraps_each_line_snapshot() {
+    let msg = "_count_r\x1b[13;2:3uows\nnext line";
     let cell = UserHistoryCell {
         message: msg.to_string(),
         text_elements: Vec::new(),
@@ -1997,12 +1997,12 @@ fn user_history_cell_wraps_and_prefixes_each_line_snapshot() {
         remote_image_urls: Vec::new(),
     };
 
-    // Small width to force wrapping more clearly. Effective wrap width is width-2 due to the ▌ prefix and trailing space.
-    let width: u16 = 12;
+    let width: u16 = 10;
     let lines = cell.display_lines(width);
     let rendered = render_lines(&lines).join("\n");
 
-    assert_eq!(render_lines(&cell.raw_lines()), ["_count_rows"]);
+    assert_eq!(render_lines(&cell.raw_lines()), ["_count_rows", "next line"]);
+    assert!(render_lines(&lines).iter().all(|line| !line.starts_with(' ')));
     insta::assert_snapshot!(rendered);
 }
 

@@ -23,9 +23,13 @@ use crate::app_server_session::AppServerStartedThread;
 use crate::app_server_session::TurnPermissionsOverride;
 use crate::app_server_session::app_server_rate_limit_snapshots;
 use crate::bottom_pane::AppLinkViewParams;
+use crate::bottom_pane::ApplyPatchApprovalRequest;
 use crate::bottom_pane::ApprovalRequest;
+use crate::bottom_pane::ExecApprovalRequest;
 use crate::bottom_pane::FeedbackAudience;
+use crate::bottom_pane::McpElicitationApprovalRequest;
 use crate::bottom_pane::McpServerElicitationFormRequest;
+use crate::bottom_pane::PermissionsApprovalRequest;
 use crate::bottom_pane::SelectionItem;
 use crate::bottom_pane::SelectionViewParams;
 use crate::bottom_pane::popup_consts::standard_popup_hint_line;
@@ -510,6 +514,7 @@ pub(crate) struct App {
     /// Config is stored here so we can recreate ChatWidgets as needed.
     pub(crate) config: Config,
     exec_output_mode: ExecOutputMode,
+    launch_cwd: PathBuf,
     pub(crate) state_db: Option<StateDbHandle>,
     cli_kv_overrides: Vec<(String, TomlValue)>,
     harness_overrides: ConfigOverrides,
@@ -765,6 +770,7 @@ impl App {
         tui: &mut tui::Tui,
         mut app_server: AppServerSession,
         mut config: Config,
+        launch_cwd: PathBuf,
         cli_kv_overrides: Vec<(String, TomlValue)>,
         harness_overrides: ConfigOverrides,
         loader_overrides: LoaderOverrides,
@@ -1035,6 +1041,7 @@ See the Codex keymap documentation for supported actions and examples."
             workspace_command_runner: Some(workspace_command_runner),
             config,
             exec_output_mode,
+            launch_cwd,
             state_db,
             cli_kv_overrides,
             harness_overrides,
@@ -1086,6 +1093,9 @@ See the Codex keymap documentation for supported actions and examples."
         let initial_session_started_at = Instant::now();
         if let Some(started) = initial_started_thread {
             let thread_id = started.session.thread_id;
+            if started.blocks_direct_input {
+                app.mark_primary_thread_parent_owned(thread_id);
+            }
             app.enqueue_primary_thread_session(started.session, started.turns)
                 .await?;
             if should_prompt_for_paused_goal_after_startup_resume {
@@ -1362,18 +1372,30 @@ See the Codex keymap documentation for supported actions and examples."
     }
 
     fn render_chat_widget_frame(&mut self, tui: &mut tui::Tui) -> Result<Rect> {
-        let desired_height = self.chat_widget.desired_height(tui.terminal.size()?.width);
-        let mut rendered_area = Rect::default();
-        tui.draw_with_resize_reflow(desired_height, |frame| {
-            let area = frame.area();
-            rendered_area = area;
-            self.chat_widget.render(area, frame.buffer);
-            if let Some((x, y)) = self.chat_widget.cursor_pos(area) {
-                frame.set_cursor_style(self.chat_widget.cursor_style(area));
-                frame.set_cursor_position((x, y));
-            }
-        })?;
-        Ok(rendered_area)
+        let width = tui.terminal.size()?.width;
+        self.with_chat_widget_frame(width, |desired_height, chat_widget| {
+            let mut rendered_area = Rect::default();
+            tui.draw_with_resize_reflow(desired_height, |frame| {
+                let area = frame.area();
+                rendered_area = area;
+                chat_widget.render(area, frame.buffer);
+                self.chat_widget.note_rendered_width(area.width);
+                if let Some((x, y)) = chat_widget.cursor_pos(area) {
+                    frame.set_cursor_style(chat_widget.cursor_style(area));
+                    frame.set_cursor_position((x, y));
+                }
+            })?;
+            Ok(rendered_area)
+        })
+    }
+
+    fn with_chat_widget_frame<T>(
+        &self,
+        width: u16,
+        render: impl FnOnce(u16, &dyn Renderable) -> T,
+    ) -> T {
+        let chat_widget = self.chat_widget.as_renderable();
+        render(chat_widget.desired_height(width), &chat_widget)
     }
 }
 

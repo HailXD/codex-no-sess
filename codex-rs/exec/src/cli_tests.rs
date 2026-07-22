@@ -14,12 +14,14 @@ fn resume_parses_prompt_after_global_flags() {
         "--dangerously-bypass-approvals-and-sandbox",
         "--skip-git-repo-check",
         "--ephemeral",
+        "--no-log",
         "--ignore-user-config",
         "--ignore-rules",
         PROMPT,
     ]);
 
     assert!(cli.ephemeral);
+    assert!(cli.no_log);
     assert!(cli.ignore_user_config);
     assert!(cli.ignore_rules);
     let Some(Command::Resume(args)) = cli.command else {

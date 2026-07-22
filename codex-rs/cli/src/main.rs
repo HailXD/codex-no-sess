@@ -2500,6 +2500,7 @@ fn merge_interactive_cli_flags(interactive: &mut TuiCli, subcommand_cli: TuiCli)
         strict_config,
         approval_policy,
         web_search,
+        no_log,
         less_output,
         no_diff,
         prompt,
@@ -2514,6 +2515,9 @@ fn merge_interactive_cli_flags(interactive: &mut TuiCli, subcommand_cli: TuiCli)
     }
     if web_search {
         interactive.web_search = true;
+    }
+    if no_log {
+        interactive.no_log = true;
     }
     if less_output {
         interactive.less_output = true;
@@ -3194,6 +3198,16 @@ mod tests {
         let interactive =
             finalize_resume_from_args(["codex", "resume", "--last", "--no-diff"].as_ref());
         assert!(interactive.no_diff);
+    }
+
+    #[test]
+    fn no_log_is_supported_by_interactive_and_session_cli() {
+        let cli = MultitoolCli::try_parse_from(["codex", "--no-log"]).expect("parse");
+        assert!(cli.interactive.no_log);
+
+        let interactive =
+            finalize_resume_from_args(["codex", "resume", "--last", "--no-log"].as_ref());
+        assert!(interactive.no_log);
     }
 
     #[test]

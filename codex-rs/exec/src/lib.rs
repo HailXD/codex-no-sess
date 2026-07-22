@@ -253,6 +253,7 @@ pub async fn run_main(cli: Cli, arg0_paths: Arg0DispatchPaths) -> anyhow::Result
         shared,
         skip_git_repo_check,
         ephemeral,
+        no_log,
         ignore_user_config,
         ignore_rules,
         removed_full_auto,
@@ -458,12 +459,15 @@ pub async fn run_main(cli: Cli, arg0_paths: Arg0DispatchPaths) -> anyhow::Result
             .cloud_config_bundle(cloud_config_bundle.clone())
             .build()
     };
-    let config = build_exec_config(
+    let mut config = build_exec_config(
         overrides,
         dangerously_bypass_approvals_and_sandbox || removed_full_auto,
         build_config,
     )
     .await?;
+    if no_log {
+        config.history.persistence = codex_config::types::HistoryPersistence::None;
+    }
     let resume_approvals_reviewer_override = cli_kv_overrides
         .iter()
         .any(|(key, _)| key == "approvals_reviewer")
@@ -548,7 +552,11 @@ pub async fn run_main(cli: Cli, arg0_paths: Arg0DispatchPaths) -> anyhow::Result
         arg0_paths.codex_self_exe.clone(),
         arg0_paths.codex_linux_sandbox_exe.clone(),
     )?;
-    let state_db = codex_core::init_state_db(&config).await;
+    let state_db = if no_log {
+        None
+    } else {
+        codex_core::init_state_db(&config).await
+    };
     let environment_manager = if run_loader_overrides.ignore_user_config {
         EnvironmentManager::from_env(Some(local_runtime_paths)).await?
     } else {

@@ -309,6 +309,11 @@ fn remove_legacy_tui_log_file(codex_home: &Path) {
     let _ = std::fs::remove_file(codex_home.join("log").join(TUI_LOG_FILE_NAME));
 }
 
+fn disable_optional_disk_writes(config: &mut Config) {
+    config.history.persistence = codex_config::types::HistoryPersistence::None;
+    config.check_for_update_on_startup = false;
+}
+
 fn remote_addr_has_explicit_port(addr: &str, parsed: &Url) -> bool {
     let Some(host) = parsed.host_str() else {
         return false;
@@ -1119,7 +1124,7 @@ pub async fn run_main(
         ..Default::default()
     };
 
-    let config = load_config_or_exit(
+    let mut config = load_config_or_exit(
         cli_kv_overrides.clone(),
         overrides.clone(),
         loader_overrides.clone(),
@@ -1127,8 +1132,13 @@ pub async fn run_main(
         strict_config,
     )
     .await;
+    if cli.no_log {
+        disable_optional_disk_writes(&mut config);
+    }
 
-    remove_legacy_tui_log_file(config.codex_home.as_path());
+    if !cli.no_log {
+        remove_legacy_tui_log_file(config.codex_home.as_path());
+    }
 
     let otel_originator = originator().value;
     let otel = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -1161,7 +1171,11 @@ pub async fn run_main(
             codex_rollout::sqlite_telemetry_recorder(metrics.clone(), otel_originator.as_str());
         let _ = codex_state::install_process_db_telemetry(telemetry);
     }
-    let state_db = init_state_db_for_app_server_target(&config, &app_server_target).await?;
+    let state_db = if cli.no_log {
+        None
+    } else {
+        init_state_db_for_app_server_target(&config, &app_server_target).await?
+    };
     let config_toml_log_dir_configured = config
         .config_layer_stack
         .effective_config()
@@ -1206,7 +1220,7 @@ pub async fn run_main(
         }
     }
 
-    let (tui_file_layer, _tui_file_log_guard) = if config_toml_log_dir_configured {
+    let (tui_file_layer, _tui_file_log_guard) = if config_toml_log_dir_configured && !cli.no_log {
         let log_dir = config.log_dir.clone();
         std::fs::create_dir_all(&log_dir)?;
         let mut log_file_opts = OpenOptions::new();
@@ -1363,7 +1377,9 @@ async fn run_ratatui_app(
     }
 
     // Initialize high-fidelity session event logging if enabled.
-    session_log::maybe_init(&initial_config);
+    if !cli.no_log {
+        session_log::maybe_init(&initial_config);
+    }
 
     let app_server_session = match start_app_server(
         &app_server_target,
@@ -1687,6 +1703,9 @@ async fn run_ratatui_app(
         }
         _ => config,
     };
+    if cli.no_log {
+        disable_optional_disk_writes(&mut config);
+    }
 
     // Configure syntax highlighting theme from the final config — onboarding
     // and resume/fork can both reload config with a different tui_theme, so

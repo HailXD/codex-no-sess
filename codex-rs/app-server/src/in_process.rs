@@ -383,7 +383,15 @@ pub async fn start(mut args: InProcessStartArgs) -> IoResult<InProcessClientHand
 
 async fn start_uninitialized(args: InProcessStartArgs) -> IoResult<InProcessClientHandle> {
     let channel_capacity = args.channel_capacity.max(1);
-    let installation_id = resolve_installation_id(&args.config.codex_home).await?;
+    let installation_id = if args.state_db.is_none()
+        && matches!(
+            args.config.history.persistence,
+            codex_config::types::HistoryPersistence::None
+        ) {
+        uuid::Uuid::new_v4().to_string()
+    } else {
+        resolve_installation_id(&args.config.codex_home).await?
+    };
     let (client_tx, mut client_rx) = mpsc::channel::<InProcessClientMessage>(channel_capacity);
     let (event_tx, event_rx) = mpsc::channel::<InProcessServerEvent>(channel_capacity);
 

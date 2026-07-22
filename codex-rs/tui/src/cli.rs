@@ -69,6 +69,10 @@ pub struct Cli {
     #[arg(long = "ephemeral", default_value_t = false)]
     pub ephemeral: bool,
 
+    /// Run without writing logs or other optional runtime state to disk
+    #[arg(long = "no-log", default_value_t = false)]
+    pub no_log: bool,
+
     /// Disable alternate screen mode
     ///
     /// Runs the TUI in inline mode, preserving terminal scrollback history.

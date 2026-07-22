@@ -31,6 +31,10 @@ pub struct Cli {
     #[arg(long = "ephemeral", global = true, default_value_t = false)]
     pub ephemeral: bool,
 
+    /// Run without writing logs or other optional runtime state to disk
+    #[arg(long = "no-log", global = true, default_value_t = false)]
+    pub no_log: bool,
+
     /// Do not load `$CODEX_HOME/config.toml`; auth still uses `CODEX_HOME`.
     #[arg(long = "ignore-user-config", global = true, default_value_t = false)]
     pub ignore_user_config: bool,

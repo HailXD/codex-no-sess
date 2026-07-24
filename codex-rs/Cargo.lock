@@ -1853,6 +1853,7 @@ version = "0.0.0"
 dependencies = [
  "codex-protocol",
  "codex-state",
+ "codex-utils-absolute-path",
  "pretty_assertions",
  "serde",
  "serde_json",
@@ -1976,6 +1977,7 @@ dependencies = [
  "codex-feedback",
  "codex-file-search",
  "codex-file-watcher",
+ "codex-git-attribution",
  "codex-git-utils",
  "codex-goal-extension",
  "codex-guardian",
@@ -2330,7 +2332,9 @@ dependencies = [
  "codex-exec",
  "codex-exec-server",
  "codex-execpolicy",
+ "codex-extension-api",
  "codex-features",
+ "codex-git-attribution",
  "codex-git-utils",
  "codex-home",
  "codex-http-client",
@@ -2642,6 +2646,7 @@ dependencies = [
  "codex-core-plugins",
  "codex-core-skills",
  "codex-exec-server",
+ "codex-exec-server-test-support",
  "codex-execpolicy",
  "codex-extension-api",
  "codex-extension-items",
@@ -2763,6 +2768,7 @@ dependencies = [
  "codex-model-provider-info",
  "codex-models-manager",
  "codex-protocol",
+ "codex-state",
  "codex-utils-absolute-path",
 ]
 
@@ -2778,6 +2784,7 @@ dependencies = [
  "codex-connectors",
  "codex-core-skills",
  "codex-exec-server",
+ "codex-exec-server-test-support",
  "codex-git-utils",
  "codex-hooks",
  "codex-http-client",
@@ -2787,6 +2794,7 @@ dependencies = [
  "codex-otel",
  "codex-plugin",
  "codex-protocol",
+ "codex-shell-command",
  "codex-skills",
  "codex-tools",
  "codex-utils-absolute-path",
@@ -2909,6 +2917,7 @@ dependencies = [
  "clatter",
  "codex-api",
  "codex-exec-server-protocol",
+ "codex-exec-server-test-support",
  "codex-file-system",
  "codex-http-client",
  "codex-network-proxy",
@@ -2920,6 +2929,7 @@ dependencies = [
  "codex-utils-path-uri",
  "codex-utils-pty",
  "codex-utils-rustls-provider",
+ "codex-websocket-client",
  "ctor 0.6.3",
  "futures",
  "http 1.4.0",
@@ -2929,7 +2939,6 @@ dependencies = [
  "pretty_assertions",
  "prost",
  "rcgen",
- "reqwest 0.12.28",
  "rustls",
  "serde",
  "serde_json",
@@ -2944,6 +2953,7 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",
+ "url",
  "uuid",
  "windows-sys 0.52.0",
  "wiremock",
@@ -2962,6 +2972,14 @@ dependencies = [
  "pretty_assertions",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "codex-exec-server-test-support"
+version = "0.0.0"
+dependencies = [
+ "codex-exec-server",
+ "codex-http-client",
 ]
 
 [[package]]
@@ -2998,6 +3016,7 @@ dependencies = [
  "codex-config",
  "codex-context-fragments",
  "codex-exec-server-protocol",
+ "codex-mcp",
  "codex-protocol",
  "codex-tools",
  "codex-utils-absolute-path",
@@ -3113,6 +3132,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "codex-git-attribution"
+version = "0.0.0"
+dependencies = [
+ "codex-backend-client",
+ "codex-extension-api",
+ "codex-http-client",
+ "codex-login",
+ "serde_json",
+ "tokio",
+ "wiremock",
+]
+
+[[package]]
 name = "codex-git-utils"
 version = "0.0.0"
 dependencies = [
@@ -3150,6 +3182,7 @@ dependencies = [
  "codex-protocol",
  "codex-state",
  "codex-tools",
+ "codex-utils-absolute-path",
  "codex-utils-template",
  "pretty_assertions",
  "serde",
@@ -3308,8 +3341,8 @@ name = "codex-lmstudio"
 version = "0.0.0"
 dependencies = [
  "codex-core",
+ "codex-http-client",
  "codex-model-provider-info",
- "reqwest 0.12.28",
  "serde_json",
  "tokio",
  "tracing",
@@ -3343,7 +3376,6 @@ dependencies = [
  "pretty_assertions",
  "rand 0.9.3",
  "regex-lite",
- "reqwest 0.12.28",
  "serde",
  "serde_json",
  "serial_test",
@@ -3372,6 +3404,7 @@ dependencies = [
  "codex-config",
  "codex-connectors",
  "codex-exec-server",
+ "codex-exec-server-test-support",
  "codex-login",
  "codex-model-provider",
  "codex-otel",
@@ -3427,11 +3460,13 @@ name = "codex-mcp-server"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "app_test_support",
  "codex-arg0",
  "codex-config",
  "codex-core",
  "codex-exec-server",
  "codex-extension-api",
+ "codex-git-attribution",
  "codex-home",
  "codex-image-generation-extension",
  "codex-login",
@@ -3802,6 +3837,7 @@ dependencies = [
  "codex-api",
  "codex-config",
  "codex-exec-server",
+ "codex-http-client",
  "codex-keyring-store",
  "codex-protocol",
  "codex-secrets",
@@ -3844,6 +3880,7 @@ dependencies = [
  "codex-otel",
  "codex-protocol",
  "codex-state",
+ "codex-utils-absolute-path",
  "codex-utils-path",
  "pretty_assertions",
  "regex",
@@ -4072,6 +4109,7 @@ dependencies = [
  "codex-protocol",
  "codex-rollout",
  "codex-state",
+ "codex-utils-absolute-path",
  "codex-utils-path",
  "futures",
  "pretty_assertions",
@@ -4771,6 +4809,7 @@ dependencies = [
  "codex-features",
  "codex-home",
  "codex-hooks",
+ "codex-http-client",
  "codex-login",
  "codex-model-provider-info",
  "codex-models-manager",
@@ -4785,7 +4824,6 @@ dependencies = [
  "opentelemetry_sdk",
  "pretty_assertions",
  "regex-lite",
- "reqwest 0.12.28",
  "serde_json",
  "shlex",
  "similar",

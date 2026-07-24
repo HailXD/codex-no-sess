@@ -1143,6 +1143,21 @@ pub async fn run_main(
         disable_optional_disk_writes(&mut config);
     }
 
+    let cloud_config_bundle = cloud_config_bundle_loader_for_storage(
+        config.codex_home.to_path_buf(),
+        /*enable_codex_api_key_env*/ false,
+        config.cli_auth_credentials_store_mode,
+        config.auth_keyring_backend_kind(),
+        config.chatgpt_base_url.clone(),
+        config.auth_route_config(),
+    )
+    .await;
+    let environment_manager = Arc::new(
+        prepared_environment_manager
+            .build(Some(local_runtime_paths), config.http_client_factory())
+            .map_err(std::io::Error::other)?,
+    );
+
     if !cli.no_log {
         remove_legacy_tui_log_file(config.codex_home.as_path());
     }
